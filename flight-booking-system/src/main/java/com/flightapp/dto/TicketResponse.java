@@ -1,7 +1,11 @@
 package com.flightapp.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.flightapp.entity.Booking;
+import com.flightapp.entity.Passenger;
 
 public class TicketResponse {
 	private String pnr;
@@ -12,6 +16,24 @@ public class TicketResponse {
     private String origin;
     private String dest;
     private List<PassengerInfo> passengers;
+    public TicketResponse(Booking booking) {
+        this.pnr = booking.getPnr();
+        this.status = booking.getStatus();
+        this.departureTime = booking.getFlight().getDepartureTime();
+        this.arrivalTime = booking.getFlight().getArrivalTime();
+        this.airline = booking.getFlight().getAirline().getAirlineName();
+        this.origin = booking.getFlight().getOrigin();
+        this.dest = booking.getFlight().getDest();
+        this.passengers = new ArrayList<>();
+        if (booking.getPassengers() != null) {
+            for (Passenger p : booking.getPassengers()) {
+                PassengerInfo pi = new PassengerInfo();
+                pi.setName(p.getName());
+                pi.setSeatNumber(p.getSeatNum());
+                this.passengers.add(pi);
+            }
+        }
+    }
     public static class PassengerInfo {
     	private String name;
         private String seatNumber;

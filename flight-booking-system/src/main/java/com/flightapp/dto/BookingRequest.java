@@ -17,10 +17,12 @@ public class BookingRequest {
     private int numberOfSeats;
     @NotBlank
     private String mealChoice;
+    @Min(1)
+    private int flightId;
     @Valid
     @NotNull
     private List<PassengerDTO> passengers;
-    public class PassengerDTO {
+    public static class PassengerDTO {
     	@NotBlank
         private String name;
         @NotBlank
@@ -84,6 +86,9 @@ public class BookingRequest {
 	}
 	public void setPassengers(List<PassengerDTO> passengers) {
 		this.passengers = passengers;
+	}
+	public int getFlightId() {
+		return flightId;
 	}
     
 }

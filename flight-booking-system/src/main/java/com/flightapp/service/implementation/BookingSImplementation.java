@@ -27,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 public class BookingSImplementation implements BookingService{
     private FlightRepository flightRepo;
     private BookingRepository bookingRepo;
+    public BookingSImplementation(FlightRepository flightRepo, BookingRepository bookingRepo) {
+        this.flightRepo = flightRepo;
+        this.bookingRepo = bookingRepo;
+    }
     @Transactional
     @Override
     public Booking bookTicket(int flightId, BookingRequest req) {

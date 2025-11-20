@@ -1,24 +1,20 @@
 package com.flightapp.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 
 import com.flightapp.dto.BookingRequest;
 import com.flightapp.dto.TicketResponse;
 import com.flightapp.entity.Booking;
+import com.flightapp.entity.Flight;
 import com.flightapp.entity.Passenger;
+import com.flightapp.exception.BadRequestException;
+import com.flightapp.repository.BookingRepository;
 import com.flightapp.service.BookingService;
-
+import com.flightapp.service.FlightService;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -27,33 +23,22 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1.0/flight")
 public class BookingController {
-    private BookingService bookingService;
-    @PostMapping("/booking/{flightId}")
-    public Booking createBooking(@PathVariable int flightId, @RequestBody @Valid BookingRequest req) {
-        log.debug("Booking request for flightId={}, seats={}", flightId, req.getNumberOfSeats());
-        return bookingService.bookTicket(flightId, req);
+
+    private final BookingService bookingService;
+    private final FlightService flightService;
+    private final BookingRepository bookingRepository;
+
+    public BookingController(BookingService bookingService,
+                             FlightService flightService,
+                             BookingRepository bookingRepository) {
+        this.bookingService = bookingService;
+        this.flightService = flightService;
+        this.bookingRepository = bookingRepository;
     }
     @GetMapping("/ticket/{pnr}")
     public TicketResponse getTicket(@PathVariable String pnr) {
         Booking booking = bookingService.getTicketByPnr(pnr);
-        TicketResponse res = new TicketResponse();
-        res.setPnr(booking.getPnr());
-        res.setStatus(booking.getStatus());
-        res.setDepartureTime(booking.getDepartureTime());
-        res.setAirline(booking.getFlight().getAirline().getAirlineName());
-        res.setOrigin(booking.getFlight().getOrigin());
-        res.setDest(booking.getFlight().getDest());
-        List<TicketResponse.PassengerInfo> list = new ArrayList<>();
-        if (booking.getPassengers() != null) {
-            for (Passenger p : booking.getPassengers()) {
-                TicketResponse.PassengerInfo pi = new TicketResponse.PassengerInfo();
-                pi.setName(p.getName());
-                pi.setSeatNumber(p.getSeatNum());
-                list.add(pi);
-            }
-        }
-        res.setPassengers(list);
-        return res;
+        return new TicketResponse(booking);
     }
     @GetMapping("/booking/history/{email}")
     public List<Booking> getHistory(@PathVariable String email) {
@@ -63,4 +48,37 @@ public class BookingController {
     public Booking cancelBooking(@PathVariable String pnr) {
         return bookingService.cancelByPnr(pnr);
     }
+    @PostMapping("/booking")
+    public TicketResponse bookFlight(@RequestBody @Valid BookingRequest req) {
+        Flight flight = flightService.findById(req.getFlightId());
+        if (flight.getAvailableSeats() <= 0)
+            throw new BadRequestException("No seats available");
+        Booking booking = new Booking();
+        booking.setName(req.getName());
+        booking.setPnr(generateRandomPNR());
+        booking.setEmail(req.getEmail());
+        booking.setBookingDate(LocalDateTime.now());
+        booking.setStatus("CONFIRMED");
+        booking.setFlight(flight);
+        flight.setAvailableSeats(flight.getAvailableSeats() - 1);
+        flightService.addFlight(flight);
+        booking.setName(req.getName());
+        booking.setPnr(generateRandomPNR());
+        List<Passenger> passengers = new ArrayList<>();
+        for (BookingRequest.PassengerDTO p : req.getPassengers()) {
+            Passenger pa = new Passenger();
+            pa.setName(p.getName());
+            pa.setAge(p.getAge());
+            pa.setGender(p.getGender());
+            pa.setSeatNum(p.getSeatNumber());
+            pa.setBooking(booking);
+            passengers.add(pa);
+        }
+        booking.setPassengers(passengers);
+        Booking saved = bookingRepository.save(booking);
+        return new TicketResponse(saved);
+    }
+	private String generateRandomPNR() {
+		return "PNR" + System.currentTimeMillis();
+	}
 }

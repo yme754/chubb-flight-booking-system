@@ -13,7 +13,8 @@ public class ArrivalTimeValidator implements ConstraintValidator<ValidArrivalTim
         boolean valid = flight.getArrivalTime().isAfter(flight.getDepartureTime());
         if (!valid) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate()).addPropertyNode("arrivalTime").addConstraintViolation();
+            context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
+                   .addPropertyNode("arrivalTime").addConstraintViolation();
         }
         return valid;
 	}
