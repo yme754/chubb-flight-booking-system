@@ -1,50 +1,40 @@
 package com.flightapp.exception;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidation(MethodArgumentNotValidException exception) {
-        Map<String, String> errorMap = new HashMap<>();
-        List<ObjectError> errorList = exception.getBindingResult().getAllErrors();
-        errorList.forEach(error -> {
-            String fieldName = ((FieldError)error).getField();
-            String message = error.getDefaultMessage();
-            errorMap.put(fieldName, message);
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(err -> {
+            errors.put(err.getField(), err.getDefaultMessage());
         });
-        return errorMap;
-    }
-	private static final String MESSAGE = "message";
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public Map<String, String> handleNotFound(ResourceNotFoundException exc) {
-        Map<String, String> m = new HashMap<>();
-        m.put(MESSAGE, exc.getMessage());
-        return m;
-    }
-    @ExceptionHandler(BadRequestException.class)
-    public Map<String, String> handleBadRequest(BadRequestException exc) {
-        Map<String, String> mp = new HashMap<>();
-        mp.put(MESSAGE, exc.getMessage());
-        return mp;
-    }
-    @ExceptionHandler(Exception.class)
-    public Map<String, String> handleAll(Exception ex) {
-        Map<String, String> mp = new HashMap<>();
-        mp.put(MESSAGE, "Internal Server Error");
-        return mp;
-    }
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleNotFound1(ResourceNotFoundException ex) {
-    	return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<String> handleBadRequest(BadRequestException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleAll(Exception ex) {
+        return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

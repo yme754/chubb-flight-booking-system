@@ -25,14 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class BookingSImplementation implements BookingService{
-    private FlightRepository flightRepo;
+	private FlightRepository flightRepo;
     private BookingRepository bookingRepo;
     public BookingSImplementation(FlightRepository flightRepo, BookingRepository bookingRepo) {
         this.flightRepo = flightRepo;
         this.bookingRepo = bookingRepo;
     }
     @Transactional
-    @Override
     public Booking bookTicket(int flightId, BookingRequest req) {
         Flight flight = flightRepo.findById(flightId)
         		.orElseThrow(() -> new ResourceNotFoundException("Flight not found for ID: " + flightId));
@@ -67,13 +66,11 @@ public class BookingSImplementation implements BookingService{
         log.debug("Created booking pnr={}", saved.getPnr());
         return saved;
     }
-    @Override
     public Booking getTicketByPnr(String pnr) {
         Booking b = bookingRepo.findByPnr(pnr);
         if (b == null) throw new ResourceNotFoundException("Ticket not found for PNR: " + pnr);
         return b;
     }
-    @Override
     public List<Booking> getHistoryByEmail(String email) {
     	List<Booking> list = bookingRepo.findByEmail(email);
         if (list == null || list.isEmpty()) 
@@ -81,7 +78,6 @@ public class BookingSImplementation implements BookingService{
         return list;
     }
     @Transactional
-    @Override
     public Booking cancelByPnr(String pnr) {
         Booking booking = bookingRepo.findByPnr(pnr);
         if (booking == null) throw new ResourceNotFoundException("Ticket not found for PNR: " + pnr);

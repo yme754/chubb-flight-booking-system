@@ -98,6 +98,8 @@ public class Flight {
 	public void setArrivalTime(LocalDateTime arrivalTime) {
 		this.arrivalTime = arrivalTime;
 	}
-	
-	
+	public void setFromLoc(String string) {
+	}
+	public void setToLoc(String string) {		
+	}
 }

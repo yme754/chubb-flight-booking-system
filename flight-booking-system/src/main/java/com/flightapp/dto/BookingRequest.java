@@ -90,5 +90,8 @@ public class BookingRequest {
 	public int getFlightId() {
 		return flightId;
 	}
+	public void setFlightId(int flightId) {
+	    this.flightId = flightId;
+	}
     
 }

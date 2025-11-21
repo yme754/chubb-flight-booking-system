@@ -20,7 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1.0/flight")
 public class FlightController {
-    private FlightService flightService;
+    private final FlightService flightService;
+    public FlightController(FlightService flightService) {
+        this.flightService = flightService;
+    }
     @PostMapping("/search")
     public List<Flight> searchFlights(@RequestBody @Valid SearchRequest req) {
         log.debug("Searching flights {} -> {} on {}", req.getOrigin(), req.getDest(), req.getDepartureTime());

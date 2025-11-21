@@ -23,14 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1.0/flight")
 public class BookingController {
-
     private final BookingService bookingService;
     private final FlightService flightService;
     private final BookingRepository bookingRepository;
-
-    public BookingController(BookingService bookingService,
-                             FlightService flightService,
-                             BookingRepository bookingRepository) {
+    public BookingController(BookingService bookingService,FlightService flightService, BookingRepository bookingRepository) {
         this.bookingService = bookingService;
         this.flightService = flightService;
         this.bookingRepository = bookingRepository;
@@ -50,32 +46,7 @@ public class BookingController {
     }
     @PostMapping("/booking")
     public TicketResponse bookFlight(@RequestBody @Valid BookingRequest req) {
-        Flight flight = flightService.findById(req.getFlightId());
-        if (flight.getAvailableSeats() <= 0)
-            throw new BadRequestException("No seats available");
-        Booking booking = new Booking();
-        booking.setName(req.getName());
-        booking.setPnr(generateRandomPNR());
-        booking.setEmail(req.getEmail());
-        booking.setBookingDate(LocalDateTime.now());
-        booking.setStatus("CONFIRMED");
-        booking.setFlight(flight);
-        flight.setAvailableSeats(flight.getAvailableSeats() - 1);
-        flightService.addFlight(flight);
-        booking.setName(req.getName());
-        booking.setPnr(generateRandomPNR());
-        List<Passenger> passengers = new ArrayList<>();
-        for (BookingRequest.PassengerDTO p : req.getPassengers()) {
-            Passenger pa = new Passenger();
-            pa.setName(p.getName());
-            pa.setAge(p.getAge());
-            pa.setGender(p.getGender());
-            pa.setSeatNum(p.getSeatNumber());
-            pa.setBooking(booking);
-            passengers.add(pa);
-        }
-        booking.setPassengers(passengers);
-        Booking saved = bookingRepository.save(booking);
+        Booking saved = bookingService.bookTicket(req.getFlightId(), req);
         return new TicketResponse(saved);
     }
 	private String generateRandomPNR() {
